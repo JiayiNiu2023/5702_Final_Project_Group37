@@ -6,11 +6,11 @@ execute:
   echo: true
 
 book:
-  title: "YOUR PROJECT TITLE"
+  title: "Wolrd Economic"
   author:
-    - AUTHOR1 (UNI1)
-    - AUTHOR2 (UNI2)
-  repo-url: https://github.com/YOUR_GITHUB_ACCOUNT/REPO_NAME
+    - Jiayi Niu (jn2941)
+    - Ruibin Lyu (rl3501)
+  repo-url: https://github.com/JiayiNiu2023/5702_Final_Project_Group37
   date: today
   page-footer:
     right: |
