@@ -6,7 +6,7 @@ execute:
   echo: true
 
 book:
-  title: "Wolrd Economic"
+  title: "World Economics"
   author:
     - Jiayi Niu (jn2941)
     - Ruibin Lyu (rl3501)
