@@ -4,7 +4,6 @@
 
 Our dataset was meticulously constructed through a multi-step process combining data from the International Monetary Fund's (IMF) DataMapper platform (https://www.imf.org/external/datamapper/datasets) and the United Nations classification databases. The economic indicators were initially downloaded as separate Excel files from the IMF, including GDP Growth, GDP Per Capita, Unemployment rates, Inflation rates, Population statistics, Current Account balances, and Government Debt levels, all covering the period from 2018 to 2023. The data processing began with standardizing country names across all files and removing regional aggregates to focus on country-level analysis. We then used VLOOKUP functions in Excel to merge data from different files and combined all separate sheets into a single Excel workbook. A crucial step involved manually correcting the development status classifications due to inconsistencies in country naming conventions between IMF and UN datasets. Throughout this process, we encountered and addressed several challenges, including inconsistent country naming conventions, missing data points (particularly for developing nations), and varying data availability across different time periods and indicators. Rather than imputing values, we preserved original "no data" entries to maintain data integrity. The final dataset encompasses information for 196 countries, though coverage varies by indicator and year, providing a comprehensive yet transparent view of global economic indicators that acknowledges data limitations and gaps. The IMF updates this data semi-annually, while the UN classifications are updated annually, ensuring our analysis reflects recent global economic trends while maintaining consistent categorical classifications.
 
-
 ### Data Sources
 
 Our analysis combines data from two authoritative sources:
@@ -22,6 +21,7 @@ Our analysis combines data from two authoritative sources:
     -   Development status categorizations (Developed vs. Developing nations)
 
 ## Missing value analysis
+
 ```{r, MESSAGE = FALSE, WARNING = FALSE}
 library(ggplot2)
 library(tidyr)
@@ -59,4 +59,3 @@ ggplot(missing_by_var, aes(x = reorder(variable, percentage), y = percentage)) +
     y = "Percentage Missing (%)"
   )
 ```
-
