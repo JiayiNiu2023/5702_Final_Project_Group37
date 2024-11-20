@@ -1,7 +1,5 @@
 # Introduction
 
-## Global Economic Indicators Analysis: Understanding Our Interconnected World
-
 ## Project Motivation
 
 In today’s global economy, understanding how countries perform across different economic indicators is more important than ever. It allows us to explore global trends, appreciate the diverse paths countries take toward development, and recognize patterns that may reveal deeper insights into regional and international dynamics. By examining the relationships between various economic metrics, we can gain a better sense of how governance, policies, and economic strategies impact growth and development.
