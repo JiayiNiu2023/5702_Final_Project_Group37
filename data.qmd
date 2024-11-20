@@ -46,18 +46,20 @@ ggplot(missing_df, aes(x = reorder(Column, -Percentage), y = Percentage)) +
   theme(axis.text.x = element_text(angle = 60, hjust = 1), plot.title = element_text(hjust = 0.5))
 ```
 
+
 ```{r}
 missing_stacked <- data |>
   group_by(Region) |>
-  summarise(across(everything(), ~mean(is.na(.))*100)) |>
+  summarise(across(everything(), ~mean(is.na(.)) * 100)) |>
   pivot_longer(-Region, 
                names_to = "Variable", 
                values_to = "Percentage") |>
   filter(Percentage > 0) |>  # Only keep variables with missing values
   mutate(Variable = gsub("_[0-9]{4}$", "", Variable)) |>
   group_by(Variable, Region) |>
-  summarise(Percentage = mean(Percentage)) |>
+  summarise(Percentage = mean(Percentage), .groups = "drop") |>
   filter(!is.na(Region))
+
 
 ggplot(missing_stacked, 
        aes(x = reorder(Variable, Percentage), 
