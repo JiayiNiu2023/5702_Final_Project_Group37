@@ -27,6 +27,7 @@ library(ggplot2)
 library(tidyr)
 library(dplyr)
 library(tibble)
+library(reshape2)
 ```
 
 ```{r}
@@ -34,28 +35,45 @@ data <- read.csv("Merged_data.csv")[,-1]
 ```
 
 ```{r, fig.height = 6}
-missing_by_var <- data.frame(
-  variable = names(data),
-  missing_count = sapply(data, function(x) sum(x == "no data" | is.na(x))),
-  stringsAsFactors = FALSE
-) |>
-  mutate(
-    total = nrow(data),
-    percentage = round(missing_count/total * 100, 2)
-  ) |>
-  arrange(desc(percentage))
+missing_percentage <- colSums(is.na(data)) / nrow(data) * 100
+missing_percentage <- missing_percentage[missing_percentage > 0]
+missing_df <- data.frame(Column = names(missing_percentage), Percentage = missing_percentage)
 
-ggplot(missing_by_var, aes(x = reorder(variable, percentage), y = percentage)) +
-  geom_bar(stat = "identity", fill = "steelblue") +
+ggplot(missing_df, aes(x = reorder(Column, -Percentage), y = Percentage)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(title = "Percentage of Missing Values by Column", x = "Columns", y = "Percentage Missing (%)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1), plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+missing_stacked <- data |>
+  group_by(Region) |>
+  summarise(across(everything(), ~mean(is.na(.))*100)) |>
+  pivot_longer(-Region, 
+               names_to = "Variable", 
+               values_to = "Percentage") |>
+  filter(Percentage > 0) |>  # Only keep variables with missing values
+  mutate(Variable = gsub("_[0-9]{4}$", "", Variable)) |>
+  group_by(Variable, Region) |>
+  summarise(Percentage = mean(Percentage)) |>
+  filter(!is.na(Region))
+
+ggplot(missing_stacked, 
+       aes(x = reorder(Variable, Percentage), 
+           y = Percentage, 
+           fill = Region)) +
+  geom_bar(stat = "identity", position = "stack") +
   coord_flip() +
+  scale_fill_brewer(palette = "Set3") +
+  labs(title = "Missing Values Distribution by Variable and Region",
+       x = "Variables",
+       y = "Percentage Missing (%)") +
   theme_minimal() +
   theme(
+    plot.title = element_text(size = 12, hjust = 0.5),
     axis.text.y = element_text(size = 8),
-    plot.title = element_text(size = 12)
-  ) +
-  labs(
-    title = "Percentage of Missing Values by Variable",
-    x = "Variables",
-    y = "Percentage Missing (%)"
-  )
+    legend.position = "right",
+    legend.text = element_text(size = 8))
 ```
+
