@@ -28,5 +28,35 @@
     "crumbs": [
       "<span class='chapter-number'>2</span>  <span class='chapter-title'>Data</span>"
     ]
+  },
+  {
+    "objectID": "index.html#global-economic-indicators-analysis-understanding-our-interconnected-world",
+    "href": "index.html#global-economic-indicators-analysis-understanding-our-interconnected-world",
+    "title": "World Economics",
+    "section": "1.1 Global Economic Indicators Analysis: Understanding Our Interconnected World",
+    "text": "1.1 Global Economic Indicators Analysis: Understanding Our Interconnected World",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Introduction</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#project-motivation",
+    "href": "index.html#project-motivation",
+    "title": "World Economics",
+    "section": "1.2 Project Motivation",
+    "text": "1.2 Project Motivation\nIn today’s global economy, understanding how countries perform across different economic indicators is more important than ever. It allows us to explore global trends, appreciate the diverse paths countries take toward development, and recognize patterns that may reveal deeper insights into regional and international dynamics. By examining the relationships between various economic metrics, we can gain a better sense of how governance, policies, and economic strategies impact growth and development.\nThis project aims to look beyond headlines and media narratives to provide a more grounded, data-driven perspective on global economies. By analyzing our merged dataset, we hope to uncover meaningful patterns and connections that illustrate how countries at different stages of development navigate their unique challenges and opportunities. Ultimately, our goal is to provide insights that contribute to a deeper understanding of global economic diversity and to highlight key trends shaping the future of nations worldwide.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Introduction</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#research-questions",
+    "href": "index.html#research-questions",
+    "title": "World Economics",
+    "section": "1.3 Research Questions",
+    "text": "1.3 Research Questions\nSome key questions we aim to explore include:\n\nHow do economic indicators vary across different regions and development stages?\nWhat patterns emerge in GDP growth and per capita income across different parts of the world?\nHow do inflation and unemployment rates compare between developed and developing nations?\nWhat relationships exist between government debt levels and economic growth?\nHow have different regions responded to recent global economic challenges?",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Introduction</span>"
+    ]
   }
 ]
