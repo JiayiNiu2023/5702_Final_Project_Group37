@@ -2,7 +2,7 @@
 
 ## Project Motivation
 
-In today’s global economy, understanding how countries perform across different economic indicators is more important than ever. It allows us to explore global trends, appreciate the diverse paths countries take toward development, and recognize patterns that may reveal deeper insights into regional and international dynamics. By examining the relationships between various economic metrics, we can gain a better sense of how governance, policies, and economic strategies impact growth and development.
+In today’s global economy, understanding how countries perform across different economic indicators is more important than ever. It allows us to explore global trends, appreciate the diverse paths countries take toward development, and recognize patterns that may reveal deeper insights into regional and international dynamics. By examining the relationship between various economic metrics, we can gain a better sense of how governance, policies, and economic strategies impact growth and development.
 
 This project aims to look beyond headlines and media narratives to provide a more grounded, data-driven perspective on global economies. By analyzing our merged dataset, we hope to find meaningful patterns and connections that illustrate how countries at different stages of development navigate their unique challenges and opportunities. Ultimately, our goal is to provide insights that contribute to a deeper understanding of global economic diversity and to highlight key trends shaping the future of nations worldwide.
 
