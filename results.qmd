@@ -18,8 +18,7 @@ library(factoextra)
 ```
 
 ```{r}
-data <- read.csv("Merged_data.csv")
-data <- data[,-1]
+data <- read.csv("Merged_data.csv")[,-1]
 ```
 
 ## Graph 1
