@@ -24,7 +24,7 @@ data <- data[,-1]
 
 ## Graph 1
 ```{r}
-#Calculate average GDP growth
+# Calculate average GDP growth
 average_gdp_growth <- data |>
   mutate(GDP_Growth_2023 = as.numeric(ifelse(GDP_Growth_2023 == "no data", NA, GDP_Growth_2023))) |>
   group_by(Region, Status) |>
