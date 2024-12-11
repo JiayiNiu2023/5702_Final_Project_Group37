@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>4&nbsp; Interactive graph – Wolrd Economic</title>
+<title>4&nbsp; Interactive Graph – World Economics</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -81,7 +81,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./d3graph.html"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Interactive graph</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./d3graph.html"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Interactive Graph</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -96,7 +96,7 @@ ul.task-list li input[type="checkbox"] {
   <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
     <div class="pt-lg-2 mt-2 text-left sidebar-header">
     <div class="sidebar-title mb-0 py-0">
-      <a href="./">Wolrd Economic</a> 
+      <a href="./">World Economics</a> 
         <div class="sidebar-tools-main">
     <a href="https://github.com/JiayiNiu2023/5702_Final_Project_Group37" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
 </div>
@@ -130,7 +130,7 @@ ul.task-list li input[type="checkbox"] {
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./d3graph.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Interactive graph</span></span></a>
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Interactive Graph</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -152,7 +152,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Interactive graph</span></h1>
+<h1 class="title"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Interactive Graph</span></h1>
 </div>
 
 
@@ -170,14 +170,89 @@ ul.task-list li input[type="checkbox"] {
 
 
 <style>
+  /* General styling */
   * {
-    font-family: sans-serif;
+    font-family: 'Arial', sans-serif;
+  }
+  svg {
+    font-size: 12px;
+  }
+  /* Tooltip styling */
+  .tooltip {
+    position: absolute;
+    text-align: left;
+    min-width: 150px;
+    padding: 10px;
+    font: 12px 'Arial', sans-serif;
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.3);
+    pointer-events: none;
+    z-index: 10;
+  }
+  /* Dropdown controls styling */
+  #plot div {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    font-size: 14px;
+  }
+  #plot label {
+    margin-right: 10px;
+    font-weight: bold;
+    color: #444;
+  }
+  #plot select {
+    padding: 5px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
+    color: #333;
+  }
+  /* Add padding to the graph area */
+  #plot {
+    margin: 20px auto;
+    width: 90%;
+    max-width: 1200px;
+  }
+  /* Description styling */
+  .description {
+    margin: 20px auto;
+    width: 90%;
+    max-width: 1200px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #333;
   }
 </style>
-<div id="plot">
-
+<!-- Add description -->
+<div class="description">
+<h2 class="anchored">
+Exploring Economic Trends
+</h2>
+<p>
+This interactive graph allows you to explore the relationship between inflation rates and current account balances for countries across different regions and years. Use the dropdown menus below to filter the data by year and region to uncover trends and patterns.
+</p>
+<p>
+The x-axis represents the logarithmic transformation of the inflation rate (+1), while the y-axis shows the logarithmic transformation of the current account balance (+1). Hover over the data points to see detailed information for each country.
+</p>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<div id="plot">
+<p><!-- Dropdown controls will be dynamically added here --></p>
+</div>
+<!-- Include D3 libraries in the recommended order -->
+<script src="https://d3js.org/d3.v6.min.js"></script>
+<!-- Optional: Add some error handling -->
+<script>
+  // Error handling for D3 library loading
+  if (typeof d3 === 'undefined') {
+    document.body.innerHTML = '<p style="color: red;">Error: D3.js library failed to load. Please check your internet connection.</p>';
+  }
+</script>
+<!-- Link to your custom script -->
 <script src="scripts/myscript.js"></script>
 
 
