@@ -1,13 +1,95 @@
-# Interactive graph
-
+---
+title: "Interactive Graph"
+format: html
+execute:
+  echo: false
+  warning: false
+  message: false
+---
 <style>
+  /* General styling */
   * {
-    font-family: sans-serif;
+    font-family: 'Arial', sans-serif;
   }
-</style> 
-
+  svg {
+    font-size: 12px;
+  }
+  /* Tooltip styling */
+  .tooltip {
+    position: absolute;
+    text-align: left;
+    min-width: 150px;
+    padding: 10px;
+    font: 12px 'Arial', sans-serif;
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.3);
+    pointer-events: none;
+    z-index: 10;
+  }
+  /* Dropdown controls styling */
+  #plot div {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    font-size: 14px;
+  }
+  #plot label {
+    margin-right: 10px;
+    font-weight: bold;
+    color: #444;
+  }
+  #plot select {
+    padding: 5px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
+    color: #333;
+  }
+  /* Add padding to the graph area */
+  #plot {
+    margin: 20px auto;
+    width: 90%;
+    max-width: 1200px;
+  }
+  /* Description styling */
+  .description {
+    margin: 20px auto;
+    width: 90%;
+    max-width: 1200px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #333;
+  }
+</style>
+<!-- Add description -->
+<div class="description">
+  <h2>Exploring Economic Trends</h2>
+  <p>
+    This interactive graph allows you to explore the relationship between 
+    inflation rates and current account balances for countries across different regions and years. 
+    Use the dropdown menus below to filter the data by year and region to uncover trends and patterns.
+  </p>
+  <p>
+    The x-axis represents the logarithmic transformation of the inflation rate (+1), while the y-axis 
+    shows the logarithmic transformation of the current account balance (+1). Hover over the data points 
+    to see detailed information for each country.
+  </p>
+</div>
 <div id="plot">
+  <!-- Dropdown controls will be dynamically added here -->
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://d3js.org/d3.v6.min.js"></script>
+
+<script>
+  // Error handling for D3 library loading
+  if (typeof d3 === 'undefined') {
+    document.body.innerHTML = '<p style="color: red;">Error: D3.js library failed to load. Please check your internet connection.</p>';
+  }
+</script>
+
 <script src="scripts/myscript.js"></script>

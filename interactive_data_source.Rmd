@@ -1,0 +1,44 @@
+---
+title: "interactive_plot_data"
+author: "Jiayi Niu"
+date: "2024-12-11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(jsonlite)
+
+data <- read.csv("Merged_data.csv")[,-1]
+
+d3_data <- data |>
+  select(Country, starts_with("Inflation_Rate"), starts_with("Current_Account"), Region) |>
+  pivot_longer(
+    cols = starts_with("Inflation_Rate"),
+    names_to = "Year_Inflation",
+    values_to = "Inflation"
+  ) |>
+  mutate(Year = gsub("Inflation_Rate_", "", Year_Inflation)) |>
+  (\(df) df |>
+     pivot_longer(
+       cols = starts_with("Current_Account"),
+       names_to = "Year_Current_Account",
+       values_to = "Current_Account"
+     ) |>
+     filter(Year == gsub("Current_Account_", "", Year_Current_Account)))() |>
+  mutate(
+    Log_Inflation = sign(Inflation) * log1p(abs(Inflation)),
+    Log_Current_Account = sign(Current_Account) * log1p(abs(Current_Account))
+  ) |>
+  filter(
+    !is.na(Country),
+    !is.na(Region),
+    !is.na(Log_Inflation),
+    !is.na(Log_Current_Account)
+  )
+
+write_json(d3_data, "d3_data.json", pretty = TRUE)
+```
