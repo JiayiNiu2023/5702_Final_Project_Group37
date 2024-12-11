@@ -15,6 +15,8 @@ library(gridExtra)
 library(treemapify)
 library(FactoMineR) 
 library(factoextra)
+library(parcoords)
+library(reshape2)
 ```
 
 ```{r}
@@ -472,4 +474,144 @@ data |>
 
 
 
+# Question 4
+What relationships exist between government debt levels and economic growth?
+
+# Read Data
+```{r}
+head(data)
+```
+
+# Heat Map
+```{r}
+# Select relevant columns for government debt and GDP growth
+relevant_data <- data[, grepl("Government_Debt|GDP_Growth", colnames(data))]
+
+# Remove rows with missing values
+relevant_data <- na.omit(relevant_data)
+
+# Calculate the correlation matrix
+cor_matrix <- cor(relevant_data, use = "pairwise.complete.obs")
+
+# Subset the correlation matrix: Debt on Y-axis, GDP Growth on X-axis
+debt_vars <- grep("Government_Debt", colnames(cor_matrix), value = TRUE)
+gdp_vars <- grep("GDP_Growth", colnames(cor_matrix), value = TRUE)
+cor_matrix_subset <- cor_matrix[debt_vars, gdp_vars]
+
+# Convert the full correlation matrix to a format suitable for ggplot
+melted_subset_cor <- melt(cor_matrix_subset)
+
+# Identify diagonal values for labeling
+diagonal_values <- data.frame(Var1 = debt_vars, Var2 = gdp_vars, value = diag(cor_matrix_subset))
+
+# Create the heatmap
+ggplot(melted_subset_cor, aes(Var2, Var1, fill = value)) +
+  geom_tile(color = "white") +
+  geom_text(data = diagonal_values, aes(label = round(value, 2)), color = "black", size = 4) +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white",
+                       midpoint = 0, limit = c(-1, 1), space = "Lab",
+                       name = "Correlation") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+  labs(title = "Correlation Heatmap: Government Debt vs. GDP Growth",
+       x = "GDP Growth",
+       y = "Government Debt")
+```
+
+
+```{r}
+# Calculate GDP growth to debt ratio for each year
+mutated_data <- data %>%
+  mutate(
+    Ratio_2018 = GDP_Growth_2018 / Government_Debt_2018,
+    Ratio_2019 = GDP_Growth_2019 / Government_Debt_2019,
+    Ratio_2020 = GDP_Growth_2020 / Government_Debt_2020,
+    Ratio_2021 = GDP_Growth_2021 / Government_Debt_2021,
+    Ratio_2022 = GDP_Growth_2022 / Government_Debt_2022,
+    Ratio_2023 = GDP_Growth_2023 / Government_Debt_2023
+  )
+
+# Filter dataset for only European countries
+european_data <- mutated_data %>%
+  filter(Region == "Europe") # Adjust "Region" to match your column name
+
+# Select relevant columns
+european_selected_data <- european_data %>%
+  select(Country, Ratio_2018, Ratio_2019, Ratio_2020, 
+         Ratio_2021, Ratio_2022, Ratio_2023)
+
+# Remove missing values
+european_selected_data <- na.omit(european_selected_data)
+
+# Create the parallel coordinates plot with the capped data
+parcoords(
+  european_selected_data,
+  brushMode = "1D-axes",   # Enable brushing
+  rownames = FALSE,        # Hide rownames
+  reorderable = TRUE,      # Allow reordering of axes
+  queue = TRUE,            # Enable smoother transitions
+  alpha = 0.5              # Set transparency for overlapping lines
+)
+```
+
+
+# Question 5
+How do inflation and unemployment rates compare between developed and developing nations?
+
+Unemployment Rates
+```{r}
+filtered_data <- data %>%
+  select(Status, starts_with("Unemployment_")) %>%
+  pivot_longer(
+    cols = starts_with("Unemployment_"),
+    names_to = "Year",
+    values_to = "Unemployment_Rate"
+  ) %>%
+  na.omit()
+
+ggplot(filtered_data, aes(x = Status, y = Unemployment_Rate, fill = Status)) +
+  geom_boxplot() +
+  theme_minimal() +
+  labs(
+    title = "Unemployment Rate Comparison",
+    x = "Country Status",
+    y = "Unemployment Rate (%)"
+  ) +
+  scale_fill_manual(values = c("Developed" = "green", "Developing" = "pink")) +
+  facet_wrap(~Year, ncol = 3) +
+  theme(
+    plot.title = element_text(hjust = 0.5)
+  )
+```
+
+Inflation Rates
+```{r}
+inflation_long <- data %>%
+  select(Status, starts_with("Inflation_")) %>%
+  pivot_longer(
+    cols = starts_with("Inflation_"),
+    names_to = "Year",
+    values_to = "Inflation_Rate"
+  ) %>%
+  mutate(Year = gsub("Inflation_", "", Year)) %>%
+  na.omit()
+
+mean_inflation <- inflation_long %>%
+  group_by(Status, Year) %>%
+  summarise(Mean_Inflation = mean(Inflation_Rate, na.rm = TRUE))
+
+ggplot(mean_inflation, aes(x = Year, y = Mean_Inflation, color = Status, group = Status)) +
+  geom_line(size = 1) +
+  geom_point(size = 2) +
+  theme_minimal() +
+  labs(
+    title = "Mean Inflation Rate Over Time",
+    x = "Year",
+    y = "Mean Inflation Rate (%)"
+  ) +
+  scale_color_manual(values = c("Developed" = "blue", "Developing" = "red")) +
+  theme(
+    plot.title = element_text(hjust = 0.5)
+  )
+```
 
