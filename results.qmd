@@ -1,167 +1,428 @@
 # Results
+
 ```{r, MESSAGE=FALSE, WARNING=FALSE}
 library(ggplot2)
 library(dplyr)
-library(tidyr)
 library(viridis)
+library(tidyr)
 library(scales)
 library(viridis)
 library(ggridges)
 library(corrplot)
 library(factoextra)
 library(tibble)
+library(gridExtra)
+library(treemapify)
+library(FactoMineR) 
+library(factoextra)
 ```
 
 ```{r}
-data <- read.csv("Merged_data.csv")[,-1]
+data <- read.csv("Merged_data.csv")
+data <- data[,-1]
 ```
 
+## Graph 1
 ```{r}
-data %>%
+#Calculate average GDP growth
+average_gdp_growth <- data |>
+  mutate(GDP_Growth_2023 = as.numeric(ifelse(GDP_Growth_2023 == "no data", NA, GDP_Growth_2023))) |>
+  group_by(Region, Status) |>
+  summarize(
+    Average_GDP_Growth = mean(GDP_Growth_2023, na.rm = TRUE),
+    .groups = "drop")
+
+ggplot(average_gdp_growth, 
+       aes(x = reorder(Region, Average_GDP_Growth), 
+           y = Average_GDP_Growth, 
+           fill = Status)) +
+  geom_bar(stat = "identity", 
+           position = "stack",
+           width = 0.7) +
+  geom_text(aes(label = sprintf("%.1f%%", Average_GDP_Growth)),
+            position = position_stack(vjust = 0.5),
+            color = "white",
+            size = 3.5) +
+  labs(title = "Average GDP Growth by Region and Development Status (2023)",
+    subtitle = "Regions ordered by total GDP growth",
+    x = NULL,
+    y = "Average GDP Growth Rate (%)",
+    fill = "Development Status") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
+    plot.subtitle = element_text(size = 11, color = "gray40", hjust = 0.5),
+    axis.title.y = element_text(size = 12, margin = margin(r = 10)),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
+    axis.text.y = element_text(size = 10),
+    legend.position = "top",
+    legend.title = element_text(size = 11),
+    legend.text = element_text(size = 10),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank())
+```
+This chart illustrates the average GDP growth rates across different regions in 2023, breaking the data down by development status. Asia leads the pack with the highest overall growth at 18.3%, driven largely by developed economies at 15.0%, while developing economies contributed 3.3%. In contrast, the Middle East experienced negative growth at -5.4%, entirely from its developing economies.
+
+Europe showed modest growth at 3.1%, with developed economies contributing 1.4% and developing economies slightly higher at 1.7%. Oceania performed slightly better, with a total growth of 4%, split between 1.3% from developed economies and 2.7% from developing economies. North America recorded 5.2% growth overall, with 2.0% coming from developed economies and 3.2% from developing ones.
+
+Africa and South America, made up entirely of developing economies, reported steady growth rates of 3.7% and 4.3%, respectively. Meanwhile, the "Other" category also performed well, growing by 5.3%, solely from developing economies. The data highlights some interesting patterns. While many regions rely heavily on either developed or developing economies, others like Asia show a mix, with its strong overall growth largely driven by its developed economies. This is notable, as developing economies are typically the ones with higher growth rates.
+
+## Graph 2
+```{r}
+# Transform data into long format
+gdp_long <- data |>
+  pivot_longer(cols = starts_with("GDP_Growth"),
+    names_to = "Year",
+    values_to = "GDP_Growth") |>
+  mutate(Year = as.numeric(gsub("GDP_Growth_", "", Year)),
+    GDP_Growth = as.numeric(ifelse(GDP_Growth == "no data", NA, GDP_Growth))) |>
+  filter(!is.na(GDP_Growth)) 
+
+# Plot GDP growth over time
+ggplot(gdp_long, aes(x = Year, y = GDP_Growth, color = Status, group = interaction(Status, Region))) +
+  geom_line(size = 0.8) +
+  geom_point(size = 1.5) +
+  facet_wrap(~ Region, scales = "free", ncol = 3) +
+  labs(title = "GDP Growth Trends by Region and Development Status (2018-2023)",
+    subtitle = "GDP growth trends over time for developed and developing nations",
+    x = "Year",
+    y = "GDP Growth Rate (%)",
+    color = "Development Status") +
+  scale_color_manual(values = c("Developed" = "#1f77b4", "Developing" = "#ff7f0e")) +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
+    plot.subtitle = element_text(size = 11, color = "gray40", hjust = 0.5),
+    axis.title = element_text(size = 12),
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_text(size = 10),
+    legend.position = "top",
+    legend.title = element_text(size = 11),
+    legend.text = element_text(size = 10),
+    panel.grid.minor = element_blank(),
+    strip.text = element_text(size = 11, face = "bold"))
+
+```
+In 2023, Asia stood out as the global growth leader, achieving an impressive 18.3% total GDP growth rate, while the Middle East struggled with a notable decline, reporting -5.4% growth. This stark contrast between regions led us to a deeper dive into the historical trends through time series analysis.
+
+The time series analysis revealed the severe economic impact of COVID-19 in 2020, which caused significant contractions across most regions. Europe, the Middle East, and the "Other" category were among the hardest hit during this period. However, recovery patterns differed widely. Asia showcased exceptional resilience, with both its developed and developing economies maintaining stable growth through the post-pandemic years. Europe, while rebounding strongly in 2021, saw its growth stabilize at a lower rate in subsequent years. North America displayed a slower, steadier recovery, with both developed and developing economies following a gradual upward trajectory.
+
+The analysis also highlighted clear differences between developed and developing economies. Developed economies (depicted by blue lines) generally experienced lower but more stable growth rates. In contrast, developing economies (shown in orange lines) were characterized by higher volatility but also greater growth potential. This distinction was particularly pronounced in South America's performance, where developing economies demonstrated notable growth following the pandemic.
+
+## Graph 3
+```{r}
+library(ggridges)
+data |>
+  select(starts_with("Government_Debt"), Region) |>
+  pivot_longer(-Region, names_to = "Year", values_to = "Government_Debt") |>
+  mutate(Year = gsub("Government_Debt_", "", Year)) |>
+  ggplot(aes(x = as.numeric(Government_Debt), y = Region, fill = Region)) +
+  geom_density_ridges(alpha = 0.7, scale = 1.5) +
+  facet_wrap(~Year) +
+  labs(title = "Regional Government_Debt Distribution (2018–2023)",
+       x = "Government_Debt", y = "Region") +
+  theme_ridges() +
+  theme(legend.position = "none")
+```
+Building on our earlier analysis of GDP growth trends, we now turn to examining government debt patterns from 2018 to 2023. The ridge density plots provide valuable insights into how debt distributions have evolved across regions over time.
+
+Europe consistently exhibits the widest spread in government debt levels, with a distinct bimodal distribution suggesting two clusters of countries with differing debt strategies. This pattern remains largely stable throughout the period, although a marked increase in overall debt levels is evident post-2020, likely due to pandemic-related fiscal measures. South America shows high variability in government debt levels, with a wide and increasingly dispersed distribution after 2020. The long right tails indicate a few countries with exceptionally high debt levels, reflecting significant outliers in the region's fiscal landscape. 
+
+Asia displays a more concentrated debt distribution, with most countries falling within a moderate debt range. However, some outliers with very high debt levels are evident, as highlighted by the right tails in the distributions, signaling unique cases of heavy borrowing. Africa demonstrates relatively lower average debt levels compared to other regions, with a fairly consistent distribution throughout the period. After 2020, however, the distribution begins to widen slightly, suggesting growing diversity in debt levels across African nations.
+
+The Middle East has one of the most compact debt distributions, with little year-to-year variability. This consistency indicates that the government has tighter control over its debt than other regions. A notable trend across all regions is a clear shift in debt distributions around 2020, which corresponds to the global economic impact of the COVID-19 pandemic. Most regions experienced an increase in debt levels and distributions following this period, reflecting widespread increases in government borrowing to address the crisis. We can describe the various approaches and challenges that regions face when managing government debt in the aftermath of global economic disruptions.
+
+## Graph 4
+
+```{r}
+gdp_income_data <- data |>
+  select(Country, Region, Status, Population_2023, 
+         GDP_Growth_2023, GDP_Per_Capi_2023) |>
+  mutate(across(c(GDP_Growth_2023, GDP_Per_Capi_2023, Population_2023), 
+                ~ as.numeric(ifelse(. == "no data", NA, .)))) |>
+  (\(df) df[complete.cases(df), ])() 
+
+ggplot(gdp_income_data, aes(x = GDP_Growth_2023, 
+                            y = GDP_Per_Capi_2023, 
+                            color = Region, 
+                            size = Population_2023)) +
+  geom_point(alpha = 0.7) +
+  scale_size(range = c(2, 10), name = "Population (2023)") +
+  scale_color_brewer(palette = "Set1") +
+  scale_x_log10(name = "Log of GDP Growth Rate (%)") + 
+  scale_y_log10(name = "Log of GDP Per Capita (USD)") + 
+  labs(title = "Log-Scaled GDP Growth vs. Per Capita Income Across Regions (2023)",
+    color = "Region") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
+    axis.title = element_text(size = 12),
+    legend.position = "right",
+    legend.title = element_text(size = 11),
+    legend.text = element_text(size = 10))
+```
+This shows regional variations in GDP growth against per capita income in 2023. Though their GDP per capita is usually low, African nations show great variation in growth rates, which reflect different phases of development. Typical of advanced economies, European nations are concentrated at higher income levels with steady, modest growth. Asia exhibits the most varied trends; large-population countries are showing strong development all over a wide income range. While South America groups more consistently in the middle for both measures, North America sits in the higher income range with consistent increase. With some high-income countries and differing rates of development, Oceania and the Middle East show erratic trends. While smaller countries are distributed over all income levels, larger bubbles reflect populous countries like those in Asia, which mix great growth and mid-to-high income.
+
+```{r, fig.height = 12, fig.width =10}
+gdp_income_data_long <- data |>
   select(Country, Region, Status, 
-         GDP_Per_Capi_2018, GDP_Per_Capi_2023,
-         Inflation_Rate_2018, Inflation_Rate_2023) %>%
-  mutate(across(c(GDP_Per_Capi_2018, GDP_Per_Capi_2023), 
-                ~as.numeric(ifelse(. == "no data", NA, .))),
-         across(c(Inflation_Rate_2018, Inflation_Rate_2023), 
-                ~as.numeric(ifelse(. == "no data", NA, .)))) %>%
-  mutate(GDP_Growth_5yr = ((GDP_Per_Capi_2023 - GDP_Per_Capi_2018) / GDP_Per_Capi_2018) * 100,
-         Inflation_Change = Inflation_Rate_2023 - Inflation_Rate_2018) %>%
-  ggplot(aes(x = GDP_Growth_5yr, y = Inflation_Change, color = Status)) +
-  geom_point(aes(size = GDP_Per_Capi_2023), alpha = 0.6) +
-  geom_smooth(method = "lm", se = TRUE) +
-  facet_wrap(~Region) +
-  scale_size_continuous(name = "GDP Per Capita 2023") +
-  theme_minimal() +
-  labs(title = "Economic Development Trajectories (2018-2023)",
-       subtitle = "Size indicates current GDP per capita",
-       x = "5-Year GDP Per Capita Growth (%)",
-       y = "Change in Inflation Rate (percentage points)")
+         starts_with("Population"), 
+         starts_with("GDP_Growth"), 
+         starts_with("GDP_Per_Capi")) |>
+  pivot_longer(cols = starts_with("GDP_Growth"), 
+               names_to = "Year", 
+               values_to = "GDP_Growth") |>
+  mutate(Year = gsub("GDP_Growth_", "", Year)) |>
+  (\(df) df |>
+    pivot_longer(cols = starts_with("GDP_Per_Capi"), 
+                 names_to = "Year_Per_Capi", 
+                 values_to = "GDP_Per_Capi") |>
+    filter(Year == gsub("GDP_Per_Capi_", "", Year_Per_Capi)))() |>
+  (\(df) df |>
+    pivot_longer(cols = starts_with("Population"), 
+                 names_to = "Year_Population", 
+                 values_to = "Population") |>
+    filter(Year == gsub("Population_", "", Year_Population)))() |>
+  select(-Year_Per_Capi, -Year_Population) |>
+  mutate(across(c(GDP_Growth, GDP_Per_Capi, Population), 
+                ~as.numeric(ifelse(. == "no data", NA, .)))) |>
+  na.omit()
+
+# Create plot list
+plot_list <- split(gdp_income_data_long, gdp_income_data_long$Year) |>
+  lapply(function(year_data) {
+    ggplot(year_data, aes(x = GDP_Growth, 
+                         y = GDP_Per_Capi, 
+                         color = Region, 
+                         size = Population)) +
+      geom_point(alpha = 0.7) +
+      scale_size(range = c(2, 10), name = "Population") +
+      scale_color_brewer(palette = "Set1") +
+      scale_x_log10(name = "Log of GDP Growth Rate (%)") +
+      scale_y_log10(name = "Log of GDP Per Capita (USD)") +
+      labs(
+        title = paste("Year:", unique(year_data$Year)),
+        color = "Region"
+      ) +
+      theme_minimal() +
+      theme(
+        plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
+        axis.title = element_text(size = 12),
+        legend.position = "right",
+        legend.title = element_text(size = 11),
+        legend.text = element_text(size = 10)
+      )
+  })
+
+# Arrange and save plots
+combined_plot <- do.call(grid.arrange, c(plot_list, ncol = 2))
+
+# Save the combined plot
+ggsave("gdp_growth_vs_per_capita_combined.png", 
+       combined_plot,
+       width = 16, 
+       height = 12, 
+       units = "in", 
+       dpi = 300)
 ```
 
-```{r, fig.width = 8}
-data %>%
-  select(Country, Status, Region, contains("GDP_Growth")) %>%
-  pivot_longer(cols = contains("GDP_Growth"),
-               names_to = "Year",
-               values_to = "Growth") %>%
-  mutate(Growth = as.numeric(ifelse(Growth == "no data", NA, Growth)),
-         Year = substr(Year, 11, 14)) %>%
-  filter(!is.na(Growth), !is.na(Status)) %>%
-  ggplot(aes(x = Year, y = Growth)) +
-  geom_violin(aes(fill = Status), alpha = 0.5) +
-  geom_boxplot(width = 0.2, alpha = 0.8) +
-  facet_wrap(~Region, scales = "free_y") +
-  theme_minimal() +
-  scale_fill_viridis_d() +
-  labs(title = "GDP Growth Distribution by Region and Development Status",
-       subtitle = "Violin plots show distribution density, boxplots show quartiles",
-       y = "GDP Growth Rate (%)",
-       x = "Year") +
-  theme(axis.text.x = element_text(angle = 45))
-```
 
-```{r, fig.size = 8}
-data %>%
-  select(Country, Region, Status, contains("Inflation_Rate")) %>%
-  pivot_longer(cols = contains("Inflation_Rate"),
-               names_to = "Year",
-               values_to = "Inflation") %>%
-  mutate(Inflation = as.numeric(ifelse(Inflation == "no data", NA, Inflation)),
-         Year = substr(Year, 15, 18)) %>%
-  filter(!is.na(Inflation)) %>%
-  ggplot(aes(x = Year, y = Inflation, fill = Status)) +
-  geom_boxplot() +
-  facet_wrap(~Region, scales = "free_y") +
+## Graph 5
+```{r, fig.height = 6}
+debt_growth_data <- data |>
+  mutate(
+    GDP_Growth_2023 = as.numeric(ifelse(GDP_Growth_2023 == "no data", NA, GDP_Growth_2023)),
+    Government_Debt_2023 = as.numeric(ifelse(Government_Debt_2023 == "no data", NA, Government_Debt_2023))
+  ) |>
+  (\(df) df[!is.na(df$GDP_Growth_2023) & !is.na(df$Government_Debt_2023), ])()
+
+
+# Calculate average debt levels for binned growth rates
+avg_metrics <- debt_growth_data |>
+  mutate(Growth_Bin = cut(GDP_Growth_2023, 
+                         breaks = seq(-10, 20, by = 2),
+                         labels = paste(seq(-10, 18, by = 2), 
+                                      seq(-8, 20, by = 2), 
+                                      sep = "-"))) |>
+  group_by(Growth_Bin) |>
+  summarise(
+    Avg_Debt = mean(Government_Debt_2023, na.rm = TRUE),
+    Count = n())
+
+ggplot() +
+  geom_col(data = avg_metrics,
+           aes(x = Growth_Bin, y = Count, fill = Avg_Debt),
+           alpha = 0.8) +
+  geom_point(data = debt_growth_data,
+             aes(x = cut(GDP_Growth_2023, 
+                        breaks = seq(-10, 20, by = 2),
+                        labels = paste(seq(-10, 18, by = 2), 
+                                     seq(-8, 20, by = 2), 
+                                     sep = "-")),
+                 y = Government_Debt_2023,
+                 color = Region),
+             position = position_jitter(width = 0.2),
+             alpha = 0.7) +
+  scale_fill_viridis(name = "Average\nGovernment Debt (%)",
+                     option = "plasma") +
+  scale_y_continuous(
+    name = "Government Debt (% of GDP)",
+    sec.axis = sec_axis(~./5, name = "Number of Countries")) +
+  scale_color_brewer(palette = "Set2") +
+  labs(
+    title = "Relationship Between Government Debt and Economic Growth (2023)",
+    subtitle = "Bars show number of countries in each growth range, colored by average debt level",
+    x = "GDP Growth Rate Range (%)",
+    color = "Region") +
   theme_minimal() +
-  scale_fill_viridis_d() +
-  labs(title = "Inflation Patterns by Region and Development Status",
-       y = "Inflation Rate (%)",
-       x = "Year") +
-  theme(axis.text.x = element_text(angle = 45))
+  theme(
+    plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
+    plot.subtitle = element_text(size = 11, color = "gray40", hjust = 0.5),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "right",
+    panel.grid.minor = element_blank())
 ```
+This visualization explores the relationship between government debt and economic growth across regions in 2023, revealing nuanced patterns. Most countries cluster within the 0-4% growth range, particularly 2-4%, with average debt levels around 60-70% of GDP (indicated by pink/purple bars). High debt levels (over 150% of GDP) appear across various growth ranges, showing that high debt does not always equate to low growth; for example, some Asian countries sustain strong growth with substantial debt, while certain European nations maintain stable growth despite high debt levels. Lower-growth regions (-2-0%) tend to have slightly higher average debt, but this trend is not uniform—African nations often achieve higher growth with lower debt, whereas European countries display moderate growth alongside higher debt burdens. Outliers in extreme growth ranges (below -6% or above 8%) often reflect unique economic conditions rather than typical debt-growth relationships. While there is a mild negative association between debt and growth, the relationship is complex and shaped by regional context and economic structure, challenging the assumption that high debt universally inhibits growth.
+
+
 ```{r}
-data %>%
+# library(ggplot2)
+# library(dplyr)
+# library(tidyr)
+# library(gganimate)
+# 
+# # Reshape the data for multiple years
+# gdp_income_data_long <- data |>
+#   select(Country, Region, Status, 
+#          starts_with("Population"), starts_with("GDP_Growth"), starts_with("GDP_Per_Capi")) |>
+#   pivot_longer(cols = starts_with("GDP_Growth"), 
+#                names_to = "Year", values_to = "GDP_Growth") |>
+#   mutate(Year = gsub("GDP_Growth_", "", Year)) |>
+#   pivot_longer(cols = starts_with("GDP_Per_Capi"), 
+#                names_to = "Year_Per_Capi", values_to = "GDP_Per_Capi") |>
+#   filter(Year == gsub("GDP_Per_Capi_", "", Year_Per_Capi)) |>
+#   pivot_longer(cols = starts_with("Population"), 
+#                names_to = "Year_Population", values_to = "Population") |>
+#   filter(Year == gsub("Population_", "", Year_Population)) |>
+#   select(-Year_Per_Capi, -Year_Population) |>
+#   mutate(across(c(GDP_Growth, GDP_Per_Capi), 
+#                 ~ as.numeric(ifelse(. == "no data", NA, .)))) |>
+#   filter(complete.cases(.)) # Remove rows with missing data
+# 
+# # Pre-calculate regression lines for each Region and Year
+# trend_lines <- gdp_income_data_long |>
+#   group_by(Region, Year) |>
+#   do({
+#     model <- lm(GDP_Per_Capi ~ GDP_Growth, data = .)
+#     data.frame(
+#       GDP_Growth = seq(min(.$GDP_Growth, na.rm = TRUE), 
+#                        max(.$GDP_Growth, na.rm = TRUE), length.out = 100),
+#       GDP_Per_Capi = predict(model, newdata = data.frame(GDP_Growth = seq(min(.$GDP_Growth, na.rm = TRUE), 
+#                                                                          max(.$GDP_Growth, na.rm = TRUE), length.out = 100))),
+#       Year = unique(.$Year), # Add Year
+#       Region = unique(.$Region) # Add Region
+#     )
+#   }) |>
+#   ungroup()
+# 
+# # Animated plot with pre-calculated trend lines
+# animated_trend <- ggplot() +
+#   geom_line(data = trend_lines, aes(x = GDP_Growth, 
+#                                     y = GDP_Per_Capi, 
+#                                     color = Region, 
+#                                     group = Region), size = 1.2) +
+#   scale_color_brewer(palette = "Set1") +
+#   scale_x_continuous(name = "GDP Growth Rate (%)") +
+#   scale_y_continuous(name = "GDP Per Capita (USD)") +
+#   labs(
+#     title = "Trends in GDP Growth vs. Per Capita Income Over Time",
+#     subtitle = "Year: {closest_state}",
+#     color = "Region"
+#   ) +
+#   theme_minimal() +
+#   theme(
+#     plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
+#     plot.subtitle = element_text(size = 12, hjust = 0.5),
+#     axis.title = element_text(size = 12),
+#     legend.position = "right",
+#     legend.title = element_text(size = 11),
+#     legend.text = element_text(size = 10)
+#   ) +
+#   transition_states(Year, transition_length = 2, state_length = 1) +
+#   ease_aes('cubic-in-out')
+# 
+# # Render the animation
+# animate(animated_trend, nframes = 100, fps = 10, width = 800, height = 600, renderer = gifski_renderer())
+# 
+# # Save the animation as a GIF
+# anim_save("gdp_trend_lines_fixed.gif")
+
+```
+
+
+```{r, fig.width =12, fig.length = 10}
+economic_data <- data %>%
   select(Country, Region, Status, 
-         contains("Government_Debt"), contains("GDP_Growth")) %>%
-  mutate(across(contains("Government_Debt"), 
-                ~as.numeric(ifelse(. == "no data", NA, .))),
-         across(contains("GDP_Growth"), 
+         GDP_Growth_2023, Government_Debt_2023, 
+         Inflation_Rate_2023) %>%
+  mutate(across(c(GDP_Growth_2023, Government_Debt_2023, Inflation_Rate_2023), 
                 ~as.numeric(ifelse(. == "no data", NA, .)))) %>%
-  mutate(Avg_Growth = rowMeans(select(., contains("GDP_Growth")), na.rm = TRUE),
-         Debt_2023 = Government_Debt_2023) %>%
-  ggplot(aes(x = Debt_2023, y = Avg_Growth)) +
-  geom_point(aes(color = Status), alpha = 0.6) +
-  geom_smooth(method = "loess", se = TRUE) +
+  na.omit()
+
+pca_data <- economic_data %>%
+  select(GDP_Growth_2023, Government_Debt_2023, Inflation_Rate_2023) %>%
+  scale()
+
+pca_results <- PCA(pca_data, graph = FALSE)
+
+biplot_data <- economic_data %>%
+  mutate(
+    PC1 = pca_results$ind$coord[, 1],
+    PC2 = pca_results$ind$coord[, 2]
+  )
+
+var_coords <- as.data.frame(pca_results$var$coord) %>%
+  select(Dim.1, Dim.2) %>%
+  rownames_to_column("Variable")
+
+ggplot(biplot_data, aes(x = PC1, y = PC2)) +
+  geom_point(aes(color = Status), size = 3, alpha = 0.7) +
+  geom_segment(data = var_coords,
+               aes(x = 0, y = 0, xend = Dim.1 * 3, yend = Dim.2 * 3),
+               arrow = arrow(length = unit(0.2, "cm")),
+               color = "blue") +
+  geom_text(data = var_coords,
+            aes(x = Dim.1 * 3.2, y = Dim.2 * 3.2, label = Variable),
+            color = "blue", size = 3) +
+  geom_text(data = filter(biplot_data, 
+                         abs(PC1) > quantile(abs(PC1), 0.9) | 
+                         abs(PC2) > quantile(abs(PC2), 0.9)),
+            aes(label = Country), 
+            size = 3, vjust = -0.5) +
   facet_wrap(~Region, scales = "free") +
+  labs(
+    title = "Regional Economic Patterns: PCA Biplot Analysis",
+    subtitle = "Relationships between GDP Growth, Government Debt, and Inflation (2023)",
+    x = "First Principal Component",
+    y = "Second Principal Component",
+    color = "Development Status"
+  ) +
   theme_minimal() +
-  scale_color_viridis_d() +
-  labs(title = "Government Debt and Economic Growth Relationship",
-       subtitle = "By Region and Development Status",
-       x = "Government Debt (% of GDP) - 2023",
-       y = "Average GDP Growth Rate (%)")
+  theme(
+    plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
+    plot.subtitle = element_text(size = 11, color = "gray40", hjust = 0.5),
+    axis.title = element_text(size = 12),
+    legend.position = "top",
+    strip.text = element_text(size = 12, face = "bold"),
+    panel.spacing = unit(1, "lines")
+  )
 ```
+
+
+
 ```{r}
-data %>%
-  select(Country, Region, Status, contains("Unemployment")) %>%
-  mutate(across(contains("Unemployment"), 
-                ~as.numeric(ifelse(. == "no data", NA, .)))) %>%
-  pivot_longer(cols = contains("Unemployment"),
-               names_to = "Year",
-               values_to = "Rate") %>%
-  mutate(Year = substr(Year, 14, 17)) %>%
-  filter(!is.na(Rate)) %>%
-  ggplot(aes(x = Year, y = Rate, fill = Status)) +
-  geom_violin(alpha = 0.7) +
-  facet_wrap(~Region, scales = "free_y") +
-  theme_minimal() +
-  scale_fill_viridis_d() +
-  labs(title = "Unemployment Rate Distribution Patterns",
-       subtitle = "By Region and Development Status",
-       x = "Year",
-       y = "Unemployment Rate (%)")
-```
-```{r}
-data %>%
-  select(Country, Region, Status, contains("Current_Account"), 
-         GDP_Per_Capi_2023) %>%
-  mutate(across(contains("Current_Account"), 
-                ~as.numeric(ifelse(. == "no data", NA, .))),
-         GDP_Per_Capi_2023 = as.numeric(ifelse(GDP_Per_Capi_2023 == "no data", 
-                                              NA, GDP_Per_Capi_2023))) %>%
-  ggplot(aes(x = Current_Account_2023, y = reorder(Region, Current_Account_2023, 
-                                                  FUN = median, na.rm = TRUE))) +
-  geom_boxplot(aes(fill = Status)) +
-  theme_minimal() +
-  scale_fill_viridis_d() +
-  labs(title = "Current Account Balance Distribution",
-       subtitle = "By Region and Development Status - 2023",
-       x = "Current Account Balance (% of GDP)",
-       y = "Region")
-```
-```{r}
-data %>%
-  select(Country, Region, Status, 
-         GDP_Per_Capi_2018, GDP_Growth_2023) %>%
-  mutate(across(c(GDP_Per_Capi_2018, GDP_Growth_2023), 
-                ~as.numeric(ifelse(. == "no data", NA, .)))) %>%
-  ggplot(aes(x = log(GDP_Per_Capi_2018), y = GDP_Growth_2023)) +
-  geom_point(aes(color = Status), alpha = 0.6) +
-  geom_smooth(method = "lm", se = TRUE) +
-  facet_wrap(~Region, scales = "free") +
-  theme_minimal() +
-  scale_color_viridis_d() +
-  labs(title = "Economic Convergence Analysis",
-       subtitle = "Growth Rate vs Initial GDP Per Capita",
-       x = "Log of Initial GDP Per Capita (2018)",
-       y = "GDP Growth Rate (2023)")
-```
-```{r}
-data %>%
-  select(Country, Region, Status, 
-         Population_2023, GDP_Per_Capi_2023) %>%
+data |>
+ dplyr::select(Country, Region, Status, 
+         Population_2023, GDP_Per_Capi_2023) |>
   mutate(across(c(Population_2023, GDP_Per_Capi_2023), 
-                ~as.numeric(ifelse(. == "no data", NA, .)))) %>%
+                ~as.numeric(ifelse(. == "no data", NA, .)))) |>
   ggplot(aes(x = log(Population_2023), y = log(GDP_Per_Capi_2023))) +
   geom_point(aes(color = Status), alpha = 0.6) +
   geom_smooth(method = "lm", se = TRUE) +
@@ -174,70 +435,16 @@ data %>%
        y = "Log GDP Per Capita (2023)")
 ```
 
-```{r}
-data %>%
-  select(Country, Region, Status,
-         GDP_Growth_2023, Government_Debt_2023, 
-         Inflation_Rate_2023, Current_Account_2023) %>%
-  mutate(across(c(GDP_Growth_2023, Government_Debt_2023, 
-                  Inflation_Rate_2023, Current_Account_2023),
-                ~as.numeric(ifelse(. == "no data", NA, .)))) %>%
-  mutate(
-    Growth_Score = scale(GDP_Growth_2023),
-    Debt_Score = -scale(Government_Debt_2023),
-    Inflation_Score = -scale(Inflation_Rate_2023),
-    Account_Score = scale(Current_Account_2023)
-  ) %>%
-  mutate(Health_Index = rowMeans(
-    cbind(Growth_Score, Debt_Score, Inflation_Score, Account_Score), 
-    na.rm = TRUE)) %>%
-  group_by(Region, Status) %>%
-  summarise(Mean_Health = mean(Health_Index, na.rm = TRUE)) %>%
-  ggplot(aes(x = reorder(Region, Mean_Health), y = Mean_Health)) +
-  geom_col(aes(fill = Status)) +
-  coord_flip() +
-  theme_minimal() +
-  scale_fill_viridis_d() +
-  labs(title = "Comprehensive Economic Health Index",
-       subtitle = "Composite of Growth, Debt, Inflation, and Current Account",
-       x = "Region",
-       y = "Economic Health Score")
-```
+
+
 
 ```{r}
-library(ggridges)
-data %>%
-  select(starts_with("GDP_Growth"), Region) %>%
-  pivot_longer(-Region, names_to = "Year", values_to = "GDP_Growth") %>%
-  mutate(Year = gsub("GDP_Growth_", "", Year)) %>%
-  ggplot(aes(x = as.numeric(GDP_Growth), y = Region, fill = Region)) +
-  geom_density_ridges(alpha = 0.7, scale = 1.5) +
-  facet_wrap(~Year) +
-  labs(title = "Regional GDP Growth Distribution (2018–2023)",
-       x = "GDP Growth (%)", y = "Region") +
-  theme_ridges() +
-  theme(legend.position = "none")
-```
-```{r, fig.width = 8}
-data %>%
-  select(starts_with("GDP_Per_Capi"), Region) %>%
-  pivot_longer(-Region, names_to = "Year", values_to = "GDP_Per_Capita") %>%
-  mutate(Year = as.numeric(gsub("GDP_Per_Capi_", "", Year))) %>%
-  ggplot(aes(x = Year, y = as.numeric(GDP_Per_Capita), color = Region, group = Region)) +
-  geom_line(size = 1.2) +
-  facet_wrap(~Region, scales = "free_y") +
-  labs(title = "GDP Per Capita Trends by Region (2018–2023)",
-       x = "Year", y = "GDP Per Capita") +
-  theme_minimal()
-```
-
-```{r}
-data %>%
-  select(starts_with("Government_Debt"), Region) %>%
-  pivot_longer(-Region, names_to = "Year", values_to = "Government_Debt") %>%
-  mutate(Year = as.numeric(gsub("Government_Debt_", "", Year))) %>%
-  group_by(Year, Region) %>%
-  summarise(Average_Debt = mean(as.numeric(Government_Debt), na.rm = TRUE)) %>%
+data |>
+  select(starts_with("Government_Debt"), Region) |>
+  pivot_longer(-Region, names_to = "Year", values_to = "Government_Debt") |>
+  mutate(Year = as.numeric(gsub("Government_Debt_", "", Year))) |>
+  group_by(Year, Region) |>
+  summarise(Average_Debt = mean(as.numeric(Government_Debt), na.rm = TRUE)) |>
   ggplot(aes(x = Year, y = Average_Debt, color = Region)) +
   geom_line(size = 1.2) +
   geom_point() +
@@ -248,24 +455,14 @@ data %>%
   theme_minimal()
 
 ```
-```{r}
-data %>%
-  select(starts_with("Population"), Region) %>%
-  pivot_longer(-Region, names_to = "Year", values_to = "Population") %>%
-  ggplot(aes(x = as.numeric(Population), y = Region, fill = Year)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  labs(title = "Population Distribution by Region", x = "Population", y = "Region") +
-  theme_minimal()
-```
+
 
 ```{r}
-library(treemapify)
-
-data %>%
-  select(starts_with("GDP_Growth"), Region) %>%
-  pivot_longer(-Region, names_to = "Year", values_to = "GDP_Growth") %>%
-  group_by(Region) %>%
-  summarise(Total_Growth = sum(as.numeric(GDP_Growth), na.rm = TRUE)) %>%
+data |>
+  select(starts_with("GDP_Growth"), Region) |>
+  pivot_longer(-Region, names_to = "Year", values_to = "GDP_Growth") |>
+  group_by(Region) |>
+  summarise(Total_Growth = sum(as.numeric(GDP_Growth), na.rm = TRUE)) |>
   ggplot(aes(area = Total_Growth, fill = Region, label = Region)) +
   geom_treemap() +
   geom_treemap_text(fontface = "bold", colour = "white", place = "centre") +
@@ -273,171 +470,7 @@ data %>%
   theme_minimal()
 
 ```
-```{r, fig.height=10, fig.width = 12}
-data %>%
-  select(contains("GDP_Growth"), contains("Inflation_Rate")) %>%
-  mutate(across(everything(), ~as.numeric(ifelse(. == "no data", NA, .)))) %>%
-  cor(use = "pairwise.complete.obs") %>%
-  corrplot(method = "color", 
-           type = "upper", 
-           order = "hclust",
-           addCoef.col = "black",
-           tl.col = "black",
-           tl.srt = 45,
-           title = "Economic Indicator Correlation Structure")
-```
-```{r}
-data %>%
-  mutate(across(c(GDP_Per_Capi_2018, GDP_Per_Capi_2023), 
-                ~as.numeric(ifelse(. == "no data", NA, .)))) %>%
-  filter(!is.na(GDP_Per_Capi_2018), !is.na(GDP_Per_Capi_2023)) %>%
-  ggplot(aes(x = GDP_Per_Capi_2018, y = GDP_Per_Capi_2023, color = Region)) +
-  geom_point(alpha = 0.6) +
-  geom_smooth(method = "loess", se = TRUE) +
-  scale_x_log10(labels = scales::dollar_format()) +
-  scale_y_log10(labels = scales::dollar_format()) +
-  theme_minimal() +
-  labs(title = "Economic Development Trajectories (2018-2023)",
-       subtitle = "Log scale with LOESS smoothing",
-       x = "GDP Per Capita 2018 (log scale)",
-       y = "GDP Per Capita 2023 (log scale)")
-```
 
-```{r}
-data %>%
-  select(Region, contains("GDP_Growth")) %>%
-  pivot_longer(cols = contains("GDP_Growth"),
-               names_to = "Year",
-               values_to = "Growth") %>%
-  mutate(Growth = as.numeric(ifelse(Growth == "no data", NA, Growth)),
-         Year = substr(Year, 11, 14)) %>%
-  filter(!is.na(Growth)) %>%
-  ggplot(aes(x = Growth, y = Year, fill = stat(x))) +
-  geom_density_ridges_gradient(scale = 3, 
-                              rel_min_height = 0.01,
-                              quantile_lines = TRUE,
-                              quantiles = 2) +
-  scale_fill_viridis_c() +
-  facet_wrap(~Region, scales = "free") +
-  theme_minimal() +
-  labs(title = "Evolution of Growth Rate Distributions",
-       subtitle = "Showing median lines and density distributions",
-       x = "GDP Growth Rate (%)",
-       y = "Year")
-
-```
-```{r}
-data %>%
-  mutate(across(c(GDP_Growth_2023, Inflation_Rate_2023, Government_Debt_2023),
-                ~as.numeric(ifelse(. == "no data", NA, .)))) %>%
-  group_by(Region, Status) %>%
-  summarise(
-    Growth_Volatility = sd(GDP_Growth_2023, na.rm = TRUE),
-    Inflation_Risk = mean(Inflation_Rate_2023, na.rm = TRUE),
-    Debt_Exposure = mean(Government_Debt_2023, na.rm = TRUE),
-    .groups = "drop"
-  ) %>%
-  mutate(
-    Vulnerability_Score = scale(Growth_Volatility) + 
-                         scale(Inflation_Risk) + 
-                         scale(Debt_Exposure)
-  ) %>%
-  ggplot(aes(x = reorder(Region, Vulnerability_Score), 
-             y = Vulnerability_Score, 
-             fill = Status)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  coord_flip() +
-  scale_fill_viridis_d() +
-  theme_minimal() +
-  labs(title = "Economic Vulnerability Index",
-       subtitle = "Composite of Growth Volatility, Inflation Risk, and Debt Exposure",
-       x = "Region",
-       y = "Vulnerability Score (Standardized)")
-
-```
-```{r}
-data %>%
-  mutate(across(c(GDP_Growth_2023, Inflation_Rate_2023, 
-                  Government_Debt_2023, Current_Account_2023),
-                ~as.numeric(ifelse(. == "no data", NA, .)))) %>%
-  group_by(Region) %>%
-  summarise(
-    Growth_Score = mean(GDP_Growth_2023, na.rm = TRUE),
-    Inflation_Score = -mean(Inflation_Rate_2023, na.rm = TRUE),
-    Debt_Score = -mean(Government_Debt_2023, na.rm = TRUE),
-    Account_Score = mean(Current_Account_2023, na.rm = TRUE),
-    .groups = "drop"
-  ) %>%
-  pivot_longer(cols = contains("Score"), 
-               names_to = "Indicator", 
-               values_to = "Score") %>%
-  ggplot(aes(x = Indicator, y = Score, group = Region, color = Region)) +
-  geom_line(size = 1) +
-  geom_point(size = 3) +
-  coord_polar() +
-  theme_minimal() +
-  labs(title = "Economic Resilience Radar",
-       subtitle = "Multi-dimensional economic performance metrics")
-
-```
-
-```{r}
-data %>%
-  mutate(across(c(GDP_Per_Capi_2023, Inflation_Rate_2023, Government_Debt_2023),
-                ~as.numeric(ifelse(. == "no data", NA, .)))) %>%
-  group_by(Status) %>%
-  mutate(GDP_Percentile = ntile(GDP_Per_Capi_2023, 100)) %>%
-  ungroup() %>%
-  ggplot(aes(x = GDP_Percentile, fill = Status)) +
-  geom_density(alpha = 0.7) +
-  facet_wrap(~Region, scales = "free_y") +
-  scale_fill_viridis_d() +
-  theme_minimal() +
-  labs(title = "Development Gap Analysis",
-       subtitle = "Distribution of economic development levels",
-       x = "GDP Per Capita Percentile",
-       y = "Density")
-```
-```{r}
-library(plotly)
-```
-
-```{r}
-line_data <- data %>%
-  select(starts_with("GDP_Growth"), Region) %>%
-  pivot_longer(-Region, names_to = "Year", values_to = "GDP_Growth") %>%
-  mutate(Year = as.numeric(gsub("GDP_Growth_", "", Year)))
-
-# Create the interactive line chart
-plot_ly(line_data, 
-        x = ~Year, 
-        y = ~as.numeric(GDP_Growth), 
-        color = ~Region, 
-        type = 'scatter', 
-        mode = 'lines+markers') %>%
-  layout(title = "Interactive GDP Growth Over Time by Region",
-         xaxis = list(title = "Year"),
-         yaxis = list(title = "GDP Growth (%)"))
-```
-```{r}
-scatter_data <- data %>%
-  select(Country, Region, starts_with("GDP_Growth"), starts_with("Government_Debt")) %>%
-  pivot_longer(cols = starts_with("GDP_Growth"), names_to = "Year", values_to = "GDP_Growth") %>%
-  pivot_longer(cols = starts_with("Government_Debt"), names_to = "Debt_Year", values_to = "Government_Debt") %>%
-  filter(gsub("GDP_Growth_", "", Year) == gsub("Government_Debt_", "", Debt_Year))
-
-plot_ly(scatter_data,
-        x = ~as.numeric(Government_Debt),
-        y = ~as.numeric(GDP_Growth),
-        color = ~Region,
-        text = ~paste("Country: ", Country, "<br>Debt: ", Government_Debt, "<br>Growth: ", GDP_Growth),
-        type = 'scatter',
-        mode = 'markers') %>%
-  layout(title = "Interactive Scatter Plot: GDP Growth vs. Government Debt",
-         xaxis = list(title = "Government Debt (%)"),
-         yaxis = list(title = "GDP Growth (%)"))
-
-```
 
 
 
