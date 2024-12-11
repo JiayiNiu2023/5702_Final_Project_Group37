@@ -8,7 +8,7 @@ Our dataset was meticulously constructed through a multi-step process combining 
 
 Our analysis combines data from two authoritative sources below:
 
-1.  **International Monetary Fund (IMF) DataMapper**: We've collected extensive economic indicators from 2018 to 2023 including:
+1.  **International Monetary Fund (IMF) DataMapper**: We have collected extensive economic indicators from 2018 to 2023 including:
     -   GDP Growth rates
     -   GDP Per Capita figures
     -   Unemployment rates
@@ -16,7 +16,7 @@ Our analysis combines data from two authoritative sources below:
     -   Population statistics
     -   Current Account balances
     -   Government Debt levels
-2.  **United Nations Classification**: We've incorporated:
+2.  **United Nations Classification**: We have incorporated:
     -   Regional classifications
     -   Development status categorizations (Developed vs. Developing nations)
 
