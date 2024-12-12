@@ -1,1 +1,5 @@
 # Conclusion
+
+The exploration of global economic indicators exhibits a contrast between developed and developing countries. Developed countries often demonstrate stable economic growth, lower inflation, and controlled government debt. In contrast, developing nations exhibit greater variability, with higher growth potential but also economic challenges, including inflationary pressures and debt issues.
+
+Throughout the project, we experienced the cycle of data visualization: defining research questions, sourcing and cleaning data, and creating visualizations to get insights. This process enhanced our understanding of data visualization techniques and we learned how to use packages to select the right types of plots, ensuring the data is presented in the way that provides clarity and drives meaningful interpretations.

@@ -285,19 +285,7 @@ Throughout this time, the debt levels of Europe and Asia have remained comparati
 
 Some of the patterns of GDP growth that we have seen are put into perspective by these trends. South America and other regions that took on more debt during the pandemic appear to be having more difficulty maintaining growth. Asia and Europe, on the other hand, are exhibiting more consistent economic performance due to their more stable debt levels.
 
-## Graph
-
-
-
-# Question 4
-What relationships exist between government debt levels and economic growth?
-
-# Read Data
-```{r}
-head(data)
-```
-
-# Heat Map
+## Graph 7: Correlation of Government Debt and GDP Growth
 ```{r}
 # Select relevant columns for government debt and GDP growth
 relevant_data <- data[, grepl("Government_Debt|GDP_Growth", colnames(data))]
@@ -332,8 +320,11 @@ ggplot(melted_subset_cor, aes(Var2, Var1, fill = value)) +
        x = "GDP Growth",
        y = "Government Debt")
 ```
+From the heatmap, we can see that the government debt is mostly inversely correlated with GDP growth: higher levels of government debt are associated with lower GDP growth rates. For example, in year 2019 and 2020, the correlation between government debt in 2019 and GDP growth in 2020 are -0.36 and -0.33. This indicates that countries with higher government debt tend to experience slower GDP growth, which aligns with the economic theory that high debt burdens would constrain economic growth.
 
+However, not all years exhibit negative correlation: the correlation in year 2022 is positive and it is close to 0 in year 2021 (the value is -0.001, so it's rounded to 0). The anomalies in these two years can be explained by the pandemic and the economic conditions after it. Due to pandemic, the government spending were implemented to recover the economy. Therefore, despite high government debt levels, more of it was for stimulating the economy and bringing it back to the normal level. Thus, it can increase GDP growth and lead to slightly positive value for correlation in year 2022.
 
+## Graph 8: GDP growth to debt ratio for all years
 ```{r}
 # Calculate GDP growth to debt ratio for each year
 mutated_data <- data %>%
@@ -368,12 +359,14 @@ parcoords(
   alpha = 0.5              # Set transparency for overlapping lines
 )
 ```
+To further understand the relationship between government debt levels and economic growth, we focused on countries of Europe. The parallel coordinates plot visualizes the ratio of GDP growth to government debt for European countries across six years (2018–2023). 
+
+From the plot, most countries maintain relatively stable ratios between 0 and 0.2, indicating that most countries balanced economic growth with their debt levels. However, in 2020, the ratio decreases for most European countries, where many countries even have negative values. This reflects the economic disruptions caused by the COVID-19 pandemic, which significantly reduced GDP growth for most countries though they increased government debt to help recover economy. In 2021, the economy bounced back, leading to many countries having ratio between 0.1 to 0.2, which indicated that more government debt spent on economic recovery.
+
+There are certain countries consistently deviating from the general trends. For example, countries like Greece and Italy tend to have consistently lower ratios, suggesting slower economic growth for these countries. In 2020, extreme negative ratios for countries like Kosovo and Andorra indicates the disproportionate economic impact of the pandemic.
 
 
-# Question 5
-How do inflation and unemployment rates compare between developed and developing nations?
-
-Unemployment Rates
+## Graph 9: Unemployment_Rate of developed and developing countries (2018-2023)
 ```{r}
 filtered_data <- data %>%
   select(Status, starts_with("Unemployment_")) %>%
@@ -398,35 +391,63 @@ ggplot(filtered_data, aes(x = Status, y = Unemployment_Rate, fill = Status)) +
     plot.title = element_text(hjust = 0.5)
   )
 ```
+The boxplots compare unemployment rates between developed and developing nations from 2018 to 2023. Across all years, developed nations have lower median unemployment rates compared to developing nations. The interquartile range (IQR) for developed countries is narrower, indicating more stability in unemployment rates. In contrast, developing countries have greater variability, as exhibited by wider IQRs.
 
-Inflation Rates
+Moreover, developing countries have more outliers. For example, in year 2023, one country reached more than 40% unemployment rate. In contrast, developed have signficantly less fewer outliers. In the same year 2023, one developed country reached almost 20% unemployment rate, which is just half of 40%. Therefore, these boxplots highlights the difference faced by developing and developed countries in maintaining employment stability.
+
+
+## Graph 10: Inflation Rate of developed and developing countries in 2023
 ```{r}
-inflation_long <- data %>%
-  select(Status, starts_with("Inflation_")) %>%
-  pivot_longer(
-    cols = starts_with("Inflation_"),
-    names_to = "Year",
-    values_to = "Inflation_Rate"
+# Average the inflation
+average_inflation_ <- data %>%
+  rowwise() %>%
+  mutate(
+    Average_Inflation = mean(
+      c_across(starts_with("Inflation_Rate_")), na.rm = TRUE
+    )
   ) %>%
-  mutate(Year = gsub("Inflation_", "", Year)) %>%
+  ungroup()
+
+# Bin inflation rates into specified categories and calculate proportions
+inflation_binned <- average_inflation_ %>%
+  select(Status, Average_Inflation) %>%
+  mutate(
+    Inflation_Bin = cut(
+      Average_Inflation,
+      breaks = c(0, 5, 10, 15, 20, Inf),
+      labels = c("0-5", "5-10", "10-15", "15-20", "20+"),
+      right = FALSE
+    )
+  ) %>%
+  group_by(Status, Inflation_Bin) %>%
+  summarise(
+    Count = n()
+  ) %>%
+  mutate(
+    Proportion = Count / sum(Count)  # Calculate proportions within each group
+  ) %>%
+  ungroup() %>%
   na.omit()
 
-mean_inflation <- inflation_long %>%
-  group_by(Status, Year) %>%
-  summarise(Mean_Inflation = mean(Inflation_Rate, na.rm = TRUE))
-
-ggplot(mean_inflation, aes(x = Year, y = Mean_Inflation, color = Status, group = Status)) +
-  geom_line(size = 1) +
-  geom_point(size = 2) +
+# Create the bar plot with proportions
+ggplot(inflation_binned, aes(x = Inflation_Bin, y = Proportion, fill = Status)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+  scale_fill_manual(
+    values = c("Developed" = "green", "Developing" = "skyblue"),
+    name = "Country Status"
+  ) +
   theme_minimal() +
   labs(
-    title = "Mean Inflation Rate Over Time",
-    x = "Year",
-    y = "Mean Inflation Rate (%)"
+    title = "Proportional Distribution of Average Inflation Rates (2018-2023)",
+    x = "Inflation Rate Bin (%)",
+    y = "Proportion of Countries"
   ) +
-  scale_color_manual(values = c("Developed" = "blue", "Developing" = "red")) +
+  scale_y_continuous(labels = scales::percent) +  # Format y-axis as percentages
   theme(
-    plot.title = element_text(hjust = 0.5)
+    legend.position = "right",                     # Move legend to the right
+    plot.title = element_text(hjust = 0.5)         # Center align the title
   )
 ```
+From the graph, most developed and developing countries have average inflation rates in "0-5%" and "5-10%", but their distributions vary. Over 60% of developed countries fall within the "0-5%" range, while a smaller proportion of developed countries have inflation in the "5-10%" range, with few developed countries beyond 10% inflation rate. This pattern indicates the ability of developed countries to maintain low inflation rates consistently over time.
 
+In contrast, while about 55% of developing countries also fall into the "0-5%" range, their inflation distribution is much more diverse. Unlike developed countries, there are a notable number of developing countries in the "10-15%" and "20%+" bins. This indicates that many developing countries face higher inflation pressures. In particular, the "20%+" bin highlights the challenges of hyperinflation in some developing economies.
