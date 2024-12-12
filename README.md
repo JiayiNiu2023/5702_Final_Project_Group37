@@ -25,6 +25,6 @@ This project is licensed under the Apache License 2.0. You may obtain a copy of 
 We welcome contributions! Please feel free to submit a Pull Request.
 
 ## 📧 Contact
-[jn2941@columbia.edu]
+[jn2941@columbia.edu], [rl3501@columbia.edu]
 
 ---

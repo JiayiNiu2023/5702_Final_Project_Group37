@@ -199,7 +199,7 @@ Over the course of both years, Asian nations (in blue), especially those with la
 
 
 ## Graph 5: Relationship Between Government Debt and Economic Growth (2023)
-```{r, fig.height = 6}
+```{r, fid.width = 10, fig.height = 6}
 debt_growth_data <- data |>
   mutate(
     GDP_Growth_2023 = as.numeric(ifelse(GDP_Growth_2023 == "no data", NA, GDP_Growth_2023)),
@@ -240,8 +240,8 @@ ggplot() +
     sec.axis = sec_axis(~./5, name = "Number of Countries")) +
   scale_color_brewer(palette = "Set2") +
   labs(
-    title = "Relationship Between Government Debt and Economic Growth (2023)",
-    subtitle = "Bars show number of countries in each growth range, colored by average debt level",
+    title = "Government Debt vs Economic Growth (2023)",
+    subtitle = "Bars show # of countries in each growth range, colored by average debt level",
     x = "GDP Growth Rate Range (%)",
     color = "Region") +
   theme_minimal() +
@@ -322,7 +322,9 @@ ggplot(melted_subset_cor, aes(Var2, Var1, fill = value)) +
 ```
 From the heatmap, we can see that the government debt is mostly inversely correlated with GDP growth: higher levels of government debt are associated with lower GDP growth rates. For example, in year 2019 and 2020, the correlation between government debt in 2019 and GDP growth in 2020 are -0.36 and -0.33. This indicates that countries with higher government debt tend to experience slower GDP growth, which aligns with the economic theory that high debt burdens would constrain economic growth.
 
-However, not all years exhibit negative correlation: the correlation in year 2022 is positive and it is close to 0 in year 2021 (the value is -0.001, so it's rounded to 0). The anomalies in these two years can be explained by the pandemic and the economic conditions after it. Due to pandemic, the government spending were implemented to recover the economy. Therefore, despite high government debt levels, more of it was for stimulating the economy and bringing it back to the normal level. Thus, it can increase GDP growth and lead to slightly positive value for correlation in year 2022.
+However, not all years exhibit negative correlation: the correlation in year 2022 is positive and it is close to 0 in year 2021 (the value is -0.001, so it’s rounded to 0). The anomalies in these two years can be explained by the pandemic and the economic conditions after it. Due to pandemic, the government spending were implemented to recover the economy. Therefore, despite high government debt levels, more of it was for stimulating the economy and bringing it back to the normal level. Thus, it can increase GDP growth and lead to slightly positive value for correlation in year 2022.
+
+
 
 ## Graph 8: GDP growth to debt ratio for all years
 ```{r}
@@ -391,9 +393,10 @@ ggplot(filtered_data, aes(x = Status, y = Unemployment_Rate, fill = Status)) +
     plot.title = element_text(hjust = 0.5)
   )
 ```
-The boxplots compare unemployment rates between developed and developing nations from 2018 to 2023. Across all years, developed nations have lower median unemployment rates compared to developing nations. The interquartile range (IQR) for developed countries is narrower, indicating more stability in unemployment rates. In contrast, developing countries have greater variability, as exhibited by wider IQRs.
+The boxplots from 2018 to 2023 compare unemployment rates between developed and developing countries, revealing noticeable disparities. Developed countries consistently show lower median unemployment rates than developing countries each year. Furthermore, the narrower interquartile range (IQR) for developed nations indicates more stable unemployment rates, while the wider IQR for developing countries highlights greater variability.
 
 Moreover, developing countries have more outliers. For example, in year 2023, one country reached more than 40% unemployment rate. In contrast, developed have signficantly less fewer outliers. In the same year 2023, one developed country reached almost 20% unemployment rate, which is just half of 40%. Therefore, these boxplots highlights the difference faced by developing and developed countries in maintaining employment stability.
+
 
 
 ## Graph 10: Inflation Rate of developed and developing countries in 2023
@@ -421,13 +424,15 @@ inflation_binned <- average_inflation_ %>%
   ) %>%
   group_by(Status, Inflation_Bin) %>%
   summarise(
-    Count = n()
+    Count = n(),
+    .groups = "drop"
   ) %>%
+  group_by(Status) %>%
   mutate(
-    Proportion = Count / sum(Count)  # Calculate proportions within each group
+    Proportion = Count / sum(Count, na.rm = TRUE)  # Calculate proportions correctly for each status
   ) %>%
   ungroup() %>%
-  na.omit()
+  complete(Status, Inflation_Bin, fill = list(Count = 0, Proportion = 0))  # Ensure all bins are represented
 
 # Create the bar plot with proportions
 ggplot(inflation_binned, aes(x = Inflation_Bin, y = Proportion, fill = Status)) +
@@ -447,7 +452,8 @@ ggplot(inflation_binned, aes(x = Inflation_Bin, y = Proportion, fill = Status)) 
     legend.position = "right",                     # Move legend to the right
     plot.title = element_text(hjust = 0.5)         # Center align the title
   )
-```
-From the graph, most developed and developing countries have average inflation rates in "0-5%" and "5-10%", but their distributions vary. Over 60% of developed countries fall within the "0-5%" range, while a smaller proportion of developed countries have inflation in the "5-10%" range, with few developed countries beyond 10% inflation rate. This pattern indicates the ability of developed countries to maintain low inflation rates consistently over time.
 
-In contrast, while about 55% of developing countries also fall into the "0-5%" range, their inflation distribution is much more diverse. Unlike developed countries, there are a notable number of developing countries in the "10-15%" and "20%+" bins. This indicates that many developing countries face higher inflation pressures. In particular, the "20%+" bin highlights the challenges of hyperinflation in some developing economies.
+```
+The graph shows that both developed and developing countries predominantly have average inflation rates in the "0-5%" and "5-10%" ranges, but their distributions tell different stories. For developed countries, over 60% fall within the "0-5%" range, reflecting their consistent ability to maintain low inflation. A smaller percentage of developed nations experience inflation in the "5-10%" range, and very few exceed 10%, emphasizing their economic stability.
+
+On the other hand, while about 55% of developing countries also fall into the "0-5%" range, their inflation rates are much more spread out. Unlike developed countries, a significant number of developing nations have inflation rates in the "10-15%" and "20%+" ranges. This highlights the higher inflation pressures many developing countries face, with some even grappling with hyperinflation, as shown by the "20%+" category. This disparity underscores the economic challenges that developing nations encounter compared to their more stable counterparts.

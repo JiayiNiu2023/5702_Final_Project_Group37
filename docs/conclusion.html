@@ -2,12 +2,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.4.553">
+<meta name="generator" content="quarto-1.5.57">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>World Economics - 5&nbsp; Conclusion</title>
+<title>5&nbsp; Conclusion – World Economics</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -77,13 +77,13 @@ ul.task-list li input[type="checkbox"] {
   <header id="quarto-header" class="headroom fixed-top">
   <nav class="quarto-secondary-nav">
     <div class="container-fluid d-flex">
-      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
         <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./conclusion.html"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Conclusion</span></a></li></ol></nav>
-        <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
-      <button type="button" class="btn quarto-search-button" aria-label="" onclick="window.quartoOpenSearch();">
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
         <i class="bi bi-search"></i>
       </button>
     </div>
@@ -143,7 +143,7 @@ ul.task-list li input[type="checkbox"] {
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
         
     </div>
 <!-- main -->
@@ -168,8 +168,7 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p>The exploration of global economic indicators exhibits a contrast between developed and developing countries. Developed countries often demonstrate stable economic growth, lower inflation, and controlled government debt. In contrast, developing nations exhibit greater variability, with higher growth potential but also economic challenges, including inflationary pressures and debt issues.</p>
-<p>Throughout the project, we experienced the cycle of data visualization: defining research questions, sourcing and cleaning data, and creating visualizations to get insights. This process enhanced our understanding of data visualization techniques and we learned how to use packages to select the right types of plots, ensuring the data is presented in the way that provides clarity and drives meaningful interpretations.</p>
+<p>Our project offers a thorough examination of global economic indicators from 2018 to 2023, looking at differences between developed and developing nations. Important regional and developmental variations in GDP growth, government debt, inflation, and unemployment rates are highlighted by key findings. Developed nations usually have low inflation, steady economic growth, and controllable public debt. On the other hand, we can see that developing nations displayed more fluctuations, such as higher rates of inflation, more pronounced gaps in unemployment, and more extreme debt-to-growth ratios, suggesting a higher susceptibility to economic shocks such as the COVID-19 pandemic. We found that Asia’s impressive post-pandemic recovery, Europe’s steady performance, and South America’s and the Middle East’s economic difficulties were all revealed by regional analysis and they indeed make sense in real life. It is also reasonable and logical to see that debt and growth have a complicated relationship. According to our correlation results, high debt does not always impede growth; rather, the effects vary depending on the economic structure and geographic setting. Although our analysis offers a lot valuable insights, it is limited by possible gaps in the dataset, such as incomplete or missing data for some particular countries and years. This was particularly impactful for regions with fewer countries, where each data point carries significant weight in shaping regional trends and insights. In real-world scenarios, the inclusion of these omitted data points could have revealed critical economic nuances and country-specific variations, especially in underrepresented regions. As a result, some trends and disparities may have been understated or overlooked. Addressing these limitations could lead to more nuanced findings and a richer understanding of the economic landscape across diverse global regions. In terms of lessons learned and experience gained, we believe that this project and the streamlined graph-making process improved our understanding of data visualization strategies and taught us how to select the appropriate plot types using packages to ensure that the data is displayed in a way that encourages meaningful interpretations and clarity. Furthermore, we discovered that, while visualizations were important for understanding complex relationships, creating understandable charts required careful consideration of scale, variables, and audience comprehension. These lessons will guide us to make more powerful data visualizations in the future, no matter it is academic projects or professional works, we can tell stories out of it.</p>
 
 
 
@@ -209,18 +208,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
     return false;
   }
-  const clipboard = new window.ClipboardJS('.code-copy-button', {
-    text: function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
-        }
-      }
-      return codeEl.innerText;
-    }
-  });
-  clipboard.on('success', function(e) {
+  const onCopySuccess = function(e) {
     // button target
     const button = e.trigger;
     // don't keep focus
@@ -252,7 +240,29 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }, 1000);
     // clear code selection
     e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
   });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
       var filterRegex = new RegExp('/' + window.location.host + '/');
@@ -260,7 +270,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
         return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }
     // Inspect non-navigation links and adorn them if external
- 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
     for (var i=0; i<links.length; i++) {
       const link = links[i];
       if (!isInternal(link.href)) {
