@@ -432,7 +432,8 @@ inflation_binned <- average_inflation_ %>%
     Proportion = Count / sum(Count, na.rm = TRUE)  # Calculate proportions correctly for each status
   ) %>%
   ungroup() %>%
-  complete(Status, Inflation_Bin, fill = list(Count = 0, Proportion = 0))  # Ensure all bins are represented
+  complete(Status, Inflation_Bin, fill = list(Count = 0, Proportion = 0)) %>%  # Ensure all bins are represented
+  filter(!is.na(Inflation_Bin))  # Remove rows with NA in Inflation_Bin
 
 # Create the bar plot with proportions
 ggplot(inflation_binned, aes(x = Inflation_Bin, y = Proportion, fill = Status)) +
